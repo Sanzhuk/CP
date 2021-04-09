@@ -1,0 +1,102 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+
+#define ll long long	
+#define pb push_back
+#define bug cout << "bug" << endl
+#define speed ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0)
+#define all(x) x.begin(), x.end()
+#define F first
+#define S second
+#define pll pair <ll, ll> 
+#define triple pair <pair <ll, ll> , ll>  
+#define ull unsigned long long
+#define ld long double
+
+const ll INF = 1e18 + 5;
+const ll inf = 1e9 + 5;
+const ll N = 3e4 + 5;
+const ll mod = 1e9 + 7;
+const ll M = 1e6 + 5;
+const ll LOG = 20;
+const ll sp = 31;
+
+int last[M], a[N], n;
+
+struct node{
+	node *L = NULL;
+	node *R = NULL;
+	int sum = 0;
+} *root[N];
+
+void build(node *v, int tl = 0, int tr = M - 5){
+	if(tl == tr)
+		return;
+	int tm = (tl + tr) / 2;
+	v -> L = new node();
+	v -> R = new node();
+	build(v -> L, tl, tm);
+	build(v -> R, tm + 1, tr);
+}
+
+void upd(node *cur, node *prev, int pos, int tl = 0, int tr = M - 5){
+	if(tl == tr){
+		cur -> sum = prev -> sum;
+		cur -> sum++;
+		return;
+	}
+	int tm = (tl + tr) / 2;
+	if(pos <= tm){
+		cur -> R = prev -> R;
+		cur -> L = new node();
+		upd(cur -> L, prev -> L, pos, tl, tm);
+	}else{
+		cur -> L = prev -> L;
+		cur -> R = new node();
+		upd(cur -> R, prev -> R, pos, tm + 1, tr);
+	}
+	cur -> sum = cur -> L -> sum + cur -> R -> sum;
+}
+
+int get(node *v, int l, int r, int tl = 0, int tr = M - 5){
+	if(tl > r || tr < l)
+		return 0;
+	if(tl >= l && tr <= r)
+		return v -> sum;
+	int tm = (tl + tr) / 2;
+	int q1 = get(v -> L, l, r, tl, tm);
+	int q2 = get(v -> R, l, r, tm + 1, tr);
+	return q1 + q2; 
+}
+
+int main(){
+	speed;
+	root[0] = new node();
+	build(root[0]);
+	cin >> n;
+	for(int i = 1; i <= n; i++){
+		cin >> a[i];
+		root[i] = new node();
+		upd(root[i], root[i - 1], last[a[i]]);
+		last[a[i]] = i;
+	}
+	int q;
+	cin >> q;
+	while(q--){
+		int l, r;
+		cin >> l >> r;
+		int len = r - l + 1;
+		cout << len - (get(root[r], l, M - 5) - get(root[l - 1], l, M - 5)) << endl;
+	}
+}
+/*
+%I64d
+	
+	
+	
+
+
+
+%I64d
+*/ 
