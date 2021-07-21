@@ -1,0 +1,169 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+
+#define ll long long	
+#define pb push_back
+#define bug cout << "bug" << endl
+#define speed ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0)
+#define all(x) x.begin(), x.end()
+#define F first
+#define S second
+#define pll pair <ll, ll> 
+#define pii pair <int, int> 
+#define triple pair <pair <ll, ll> , ll>  
+#define ull unsigned long long
+#define ld long double
+#define pinode pair <node*, node*>
+
+const ll INF = 9e18 + 5;
+const ll inf = 1e9 + 5;
+const ll N = 2e5 + 5;
+const ll mod = 1e9 + 7;
+const ll M = 1e3 + 5;
+const ll LOG = 20;
+const ll sp = 31;
+
+int n, col;
+
+int SuperRand(){
+	return (rand() << 15) | rand();
+}
+
+struct node{
+	node *l;
+	node *r;
+	int sz;
+	int prior;
+	int mn;
+	int val;
+	node() : l(nullptr), r(nullptr), sz(0), mn(inf) {}
+	node(int val_) : l(nullptr), r(nullptr), sz(1), mn(val_), val(val_), prior(SuperRand()) {}
+};
+
+int get_sz(node *v){
+	if(!v)
+		return 0;
+	return v -> sz;
+}
+
+int get_mn(node *v){
+	if(!v)
+		return inf;
+	return v -> mn;
+}
+
+void update(node *v){
+	if(v){
+		v -> sz = (get_sz(v -> l) + get_sz(v -> r) + 1);
+		v -> mn = min({v -> val, get_mn(v -> l), get_mn(v -> r)}); 
+	}
+}
+
+pinode split(node *v, int k){
+	if(!v)
+		return {nullptr, nullptr};
+	if(get_sz(v -> l) >= k){
+		pinode q = split(v -> l, k);
+		v -> l = q.S;
+		update(v);
+		return {q.F, v};
+	}else{
+		pinode q = split(v -> r, k - get_sz(v -> l) - 1);
+		v -> r = q.F;
+		update(v);
+		return {v, q.S};
+	}
+}
+
+node* merge(node *v1, node *v2){
+	if(!v1)
+		return v2;
+	if(!v2)
+		return v1;
+	if(v1 -> prior > v2 -> prior){
+		v1 -> r = merge(v1 -> r, v2);
+		update(v1);
+		return v1;
+	}else{
+		v2 -> l = merge(v1, v2 -> l);
+		update(v2);
+		return v2;
+	}
+}
+
+
+int get(node *v, int ql, int qr, int l){
+	if(!v)
+		return inf;
+	int r = l + get_sz(v) - 1;
+	if(ql > r || qr < l)
+		return inf;
+	if(l >= ql && r <= qr)
+		return v -> mn;
+	int resl = get(v -> l, ql, qr, l);
+	int resr = get(v -> r, ql, qr, l + get_sz(v -> l) + 1);
+	int resroot = inf;
+    int posroot = l + get_sz(v -> l);
+    if (posroot >= ql && posroot <= qr)
+        resroot = v -> val;
+	return min({resl, resr, resroot});
+}
+
+int main(){
+	speed;
+	int f = 0;
+	cin >> n;
+	node *root = new node();
+	while(n--){
+		char x;
+		cin >> x;
+		if(x == '?'){
+			int l, r;
+			cin >> l >> r;
+			cout << get(root, l, r, 1) << endl;
+		}else{
+			int i, x;
+			cin >> i >> x;
+			node *cur = new node(x);
+			col++;
+			if(!f){
+				root = cur;
+				f = 1;
+				continue;
+			}
+			if(i == 0){
+				root = merge(cur, root);
+				update(root);
+				continue;
+			}
+			if(i == col){
+				root = merge(root, cur);
+				update(root);
+				continue;
+			}
+			pinode temp = split(root, i);
+			root = merge(temp.F, cur);
+			update(root);
+			root = merge(root, temp.S);
+			update(root);
+		}
+	}	
+}
+/*
+%I64d
+
+
+4
++ 0 1
+? 1 1
++ 0 2
+? 1 1
+
+		
+		
+
+
+
+%I64d
+*/ 
