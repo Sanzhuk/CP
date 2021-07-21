@@ -1,0 +1,237 @@
+#include <bits/stdc++.h>
+
+using namespace std;
+
+#define ll long long	
+#define pb push_back
+#define bug cout << "bug" << endl
+#define speed ios_base::sync_with_stdio(0), cin.tie(0), cout.tie(0)
+#define all(x) x.begin(), x.end()
+#define F first
+#define S second
+#define pll pair <ll, ll> 
+#define pii pair <int, int> 
+#define triple pair <pair <ll, ll> , ll>  
+#define ull unsigned long long
+#define ld long double
+#define pinode pair <node*, node*>
+
+const ll INF = 9e18 + 5;
+const ll inf = 1e9 + 5;
+const ll N = 2e5 + 5;
+const ll mod = 1e9 + 7;
+const ll M = 1e3 + 5;
+const ll LOG = 20;
+const ll sp = 31;
+
+int superRand(){
+	return (rand() << 15) | rand();
+}
+
+struct node{
+	node *l;
+	node *r;
+	int key;
+	int prior;
+	int sz;
+	node() : l(nullptr), r(nullptr) {}
+	node(int x) : l(nullptr), r(nullptr), sz(1), key(x), prior(superRand()) {}
+};
+
+node *root = new node();
+
+int get_sz(node *v){
+	if(!v)
+		return 0;
+	return v -> sz;
+}
+
+void update(node *v){
+	if(!v)
+		return;
+	v -> sz = get_sz(v -> l) + get_sz(v -> r) + 1;
+}
+
+pinode split(node *v, int x){
+	if(!v)
+		return {nullptr, nullptr};
+	if(v -> key < x){
+		pinode q = split(v -> r, x);
+		v -> r = q.F;
+		update(v);
+		return {v, q.S};
+	}else{
+		pinode q = split(v -> l, x);
+		v -> l = q.S;
+		update(v);
+		return {q.F, v};
+	}
+}
+
+node* merge(node *v1, node *v2){
+	if(!v1)
+		return v2;
+	if(!v2)
+		return v1;
+	if(v1 -> prior > v2 -> prior){
+		v1 -> r = merge(v1 -> r, v2);
+		update(v1);
+		return v1;
+	}else{
+		v2 -> l = merge(v1, v2 -> l);
+		update(v2);
+		return v2;
+	}
+}
+
+int find(node *v, int x){
+	if(!v)
+		return 0;
+	if(v -> key == x)
+		return 1;
+	if(v -> key > x)
+		return find(v -> l, x);
+	else
+		return find(v -> r, x);
+}
+
+void print(node *v){
+	if(!v)
+		return;
+	print(v -> l);
+	cout << v -> key << ' ';
+	print(v -> r);
+}
+
+node* ins(node *v, node *cur){
+	if(!v)
+		return cur;	
+	if(cur -> prior > v -> prior){
+		pinode q = split(v, cur -> key);
+		cur -> l = q.F;
+		cur -> r = q.S;
+		update(cur);
+		return cur;
+	}else if(cur -> key < v -> key){
+		v -> l = ins(v -> l, cur);
+		update(v);
+		return v;
+	}
+	else{
+		v -> r = ins(v -> r, cur);
+		update(v);
+		return v;
+	}
+	update(v);
+}
+
+node* del(node *v, int x){
+	if(v -> key == x)
+		return merge(v -> l, v -> r);
+	if(v -> key > x){
+		v -> l = del(v -> l, x);
+		update(v);
+		return v;
+	}else{
+		v -> r = del(v -> r, x);
+		update(v);
+		return v;
+	}
+	update(v);
+}
+
+int nxt(node *v, int x){
+	if(!v)
+		return inf;
+	int cur = inf;
+	if(v -> key > x)
+		cur = v -> key;
+	if(v -> key <= x)
+		return min(cur, nxt(v -> r, x));
+	else
+		return min(cur, nxt(v -> l, x));
+}
+	
+int prv(node *v, int x){
+	if(!v)
+		return -inf;
+	int cur = -inf;
+	if(v -> key < x)
+		cur = v -> key;
+	if(v -> key >= x)	
+		return max(cur, prv(v -> l, x));
+	else
+		return max(cur, prv(v -> r, x));
+}	
+
+int kth(node *v, int x){
+	if(!v)
+		return -1;
+	if(get_sz(v -> l) + 1 == x)
+		return v -> key;
+	if(get_sz(v -> l) >= x)
+		return kth(v -> l, x);
+	else
+		return kth(v -> r, x - get_sz(v -> l) - 1);
+}
+
+
+int main(){
+	speed;
+	root = nullptr;
+	string tp;
+	while(cin >> tp){
+		int x;
+		cin >> x;
+		node *cur = new node(x);
+		if(tp == "insert"){
+			if(!find(root, x)){
+				root = ins(root, cur);
+			}
+		}
+		else if(tp == "delete"){
+			if(find(root, x)){
+				root = del(root, x);
+			}
+		}
+		else if(tp == "exists"){
+			if(find(root, x))
+				cout << "true" << endl;
+			else
+				cout << "false" << endl;
+		}
+		else if(tp == "next"){
+			if(nxt(root, x) == inf)
+				cout << "none" << endl;
+			else
+				cout << nxt(root, x) << endl;
+		}else if(tp == "prev"){
+			if(prv(root, x) == -inf)
+				cout << "none" << endl;
+			else
+				cout << prv(root, x) << endl;
+		}else{
+			if(kth(root, x) == -1)
+				cout << "none" << endl;
+			else
+				cout << kth(root, x) << endl;
+		}
+//		print(root);
+//		cout << endl;
+	}
+}
+/*
+%I64d
+
+
+5 5
+1 2 3 4 5
+1 2 5
+
+		
+		
+
+
+
+%I64d
+*/ 
